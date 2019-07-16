@@ -1,4 +1,4 @@
 {
   "previewServer.browsers": ["chrome"],
-  "previewServer.ignoreDefaultBroswer": true
+  "previewServer.ignoreDefaultBrowser": true
 }
