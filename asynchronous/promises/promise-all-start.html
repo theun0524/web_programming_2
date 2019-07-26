@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>fetch() promise.all() example</title>
+  </head>
+  <body>
+    <script>
+      // Define function to fetch a file and return it in a usable form
+      function fetchAndDecode(url, type) {
+        // Returning the top level promise, so the result of the entire chain is returned out of the function
+        return fetch(url).then(response => {
+          // Depending on what type of file is being fetched, use the relevant function to decode its contents
+          if(type === 'blob') {
+            return response.blob();
+          } else if(type === 'text') {
+            return response.text();
+          }
+        })
+        .catch(e => {
+          console.log(`There has been a problem with your fetch operation for resource "${url}": ` + e.message);
+        });
+      }
+
+    </script>
+  </body>
+</html>
