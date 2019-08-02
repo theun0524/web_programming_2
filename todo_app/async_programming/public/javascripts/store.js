@@ -1,9 +1,3 @@
-// match query and item
-// return true if query is null
-const match = (query, item) => {
-  return !query || Object.keys(query).every(k => item[k] === query[k]);
-}
-
 class Store {
   constructor(name) {
     this._dbName = name;
@@ -16,12 +10,7 @@ class Store {
 
   find = query => {
     const todos = JSON.parse(localStorage.getItem(this._dbName));
-
     return todos.filter(item => match(query, item));
-  };
-
-  findAll = () => {
-    return JSON.parse(localStorage.getItem(this._dbName));
   };
 
   save = async (data, id) => {

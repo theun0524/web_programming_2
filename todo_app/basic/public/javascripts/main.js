@@ -1,50 +1,12 @@
-
 // QuerySelector utility function
 const qs = (selector, scope) => {
   return (scope || document).querySelector(selector);
 };
 
-// Storage for todo list
-let store = [];
-
-// create todo item
-const createItem = title => {
-  if (title.trim() === '') {
-    return;
-  }
-
-  store.push({ 
-    id: new Date().getTime(),
-    title: title.trim(),
-    completed: false,
-  });
+// true if query is undefined or matched to item
+const match = (query, item) => {
+  return !query || Object.keys(query).every(k => item[k] === query[k]);
 }
-
-// find todo item
-const findItem = id => store.find(item => item.id === id);
-
-// remove todo item
-const removeItem = id => {
-  const index = store.findIndex(item => item.id === id);
-  if (index >= 0) {
-    store.splice(index, 1);
-  }
-};
-
-// update todo item
-const updateItem = (id, data) => {
-  const todo = findItem(id);
-  if (!todo) return;
-
-  Object.assign(todo, data);
-};
-
-// toggle all todo list
-const toggleAll = completed => {
-  for (todo of store) {
-    todo.completed = completed;
-  }
-};
 
 // enter edit mode
 const enterEditMode = (id, title) => {
@@ -71,7 +33,7 @@ const exitEditMode = (id, title) => {
 
   if (title) {
     qs('label', item).textContent = title;
-    updateItem(id, { title: title });
+    saveItem({ title: title }, id);
   }
 };
 
@@ -88,7 +50,7 @@ const toggleComplete = (id, completed) => {
 };
 
 const updateCount = () => {
-  const count = store.filter(item => !item.completed).length;
+  const count = findItem({ completed: false }).length;
   qs('.todo-count').innerHTML = `<strong>${count}</strong> items left`;
 };
 
@@ -106,7 +68,8 @@ const render = () => {
   todoList.innerHTML = '';
 
   // Update filtered items
-  for (todo of store) {
+  const data = findItem();
+  for (todo of data) {
     if (
       (route === '') ||
       (route === 'active' && !todo.completed) ||
@@ -114,7 +77,7 @@ const render = () => {
     ) {
       // add item to todo list
       const item = document.createElement('li');
-      item.setAttribute('data-id', todo.id);
+      item.setAttribute('data-id', todo._id);
       todoList.appendChild(item);
 
       // add view element to todo item
@@ -125,23 +88,7 @@ const render = () => {
           '<button class="destroy"></button>' + 
         '</div>';
 
-      toggleComplete(todo.id, todo.completed);
-
-      qs('.toggle', item).addEventListener('change', e => {
-        const id = Number(e.target.closest('li').dataset.id);
-        toggleComplete(id, e.target.checked);
-        updateItem(id, { completed: e.target.checked });
-        updateCount();
-      });
-      qs('.destroy', item).addEventListener('click', e => {
-        const id = Number(e.target.closest('li').dataset.id);
-        removeItem(id);
-        render();
-      });
-      qs('label', item).addEventListener('dblclick', e => {
-        const id = Number(e.target.closest('li').dataset.id);
-        enterEditMode(id, e.target.textContent);
-      });
+      toggleComplete(todo._id, todo.completed);
     }
   }
 
@@ -154,18 +101,27 @@ const render = () => {
 
 // Register event handlers
 qs('.new-todo').addEventListener('change', e => {
-  createItem(e.target.value);
+  saveItem({ 
+    title: e.target.value.trim(),
+    completed: false,
+  });
   e.target.value = '';
   render();
 });
 
 qs('.toggle-all').addEventListener('change', e => {
-  toggleAll(e.target.checked);
+  const data = findItem();
+  data.forEach(item => {
+    saveItem({ completed: e.target.checked }, item._id);
+  });
   render();  
 });
 
 qs('.clear-completed').addEventListener('click', () => {
-  store = store.filter(item => !item.completed);
+  const data = findItem({ completed: true });
+  data.forEach(item => {
+    removeItem(item._id);
+  })
   render();
 });
 
@@ -175,7 +131,7 @@ qs('.todo-list').addEventListener('blur', e => {
     return;
   }
 
-  const id = Number(e.target.closest('li').dataset.id);
+  const id = e.target.closest('li').dataset.id;
 
   if (!e.target.dataset.iscanceled) {
     exitEditMode(id, e.target.value);
@@ -190,6 +146,28 @@ qs('.todo-list').addEventListener('keyup', e => {
   } else if (e.code === 'Escape') {
     e.target.dataset.iscanceled = true;
     e.target.blur();
+  }
+});
+
+qs('.todo-list').addEventListener('change', e => {
+  const id = e.target.closest('li').dataset.id;
+  if (id && e.target.matches('.toggle')) {
+    toggleComplete(id, e.target.checked);
+    saveItem({ completed: e.target.checked }, id);
+    updateCount();
+  }
+});
+qs('.todo-list').addEventListener('click', e => {
+  const id = e.target.closest('li').dataset.id;
+  if (id && e.target.matches('.destroy')) {
+    removeItem(id);
+    render();
+  }
+});
+qs('.todo-list').addEventListener('dblclick', e => {
+  const id = e.target.closest('li').dataset.id;
+  if (id && e.target.matches('label')) {
+    enterEditMode(id, e.target.textContent);
   }
 });
 
