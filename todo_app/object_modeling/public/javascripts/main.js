@@ -3,6 +3,7 @@ const qs = (selector, scope) => {
   return (scope || document).querySelector(selector);
 };
 
+// true if query is undefined or matched to item
 const match = (query, item) => {
   return !query || Object.keys(query).every(k => item[k] === query[k]);
 }
@@ -79,7 +80,7 @@ const render = () => {
     ) {
       // add item to todo list
       const item = document.createElement('li');
-      item.setAttribute('data-id', todo.id);
+      item.setAttribute('data-id', todo._id);
       todoList.appendChild(item);
 
       // add view element to todo item
@@ -90,23 +91,7 @@ const render = () => {
           '<button class="destroy"></button>' + 
         '</div>';
 
-      updateComplete(todo.id, todo.completed);
-
-      qs('.toggle', item).addEventListener('change', e => {
-        const id = Number(e.target.closest('li').dataset.id);
-        updateComplete(id, e.target.checked);
-        model.update(id, { completed: e.target.checked });
-        updateCount();
-      });
-      qs('.destroy', item).addEventListener('click', e => {
-        const id = Number(e.target.closest('li').dataset.id);
-        model.remove(id);
-        render();
-      });
-      qs('label', item).addEventListener('dblclick', e => {
-        const id = Number(e.target.closest('li').dataset.id);
-        enterEditMode(id, e.target.textContent);
-      });
+      updateComplete(todo._id, todo.completed);
     }
   }
 
@@ -127,7 +112,7 @@ qs('.new-todo').addEventListener('change', e => {
 qs('.toggle-all').addEventListener('change', e => {
   const data = model.find();
   data.forEach(
-    item => model.update(item.id, { completed: e.target.checked })
+    item => model.update(item._id, { completed: e.target.checked })
   );
   render();  
 });
@@ -135,7 +120,7 @@ qs('.toggle-all').addEventListener('change', e => {
 qs('.clear-completed').addEventListener('click', () => {
   const data = model.find({ completed: true });
   data.forEach(
-    item => model.remove(item.id)
+    item => model.remove(item._id)
   );
   render();
 });
@@ -146,7 +131,7 @@ qs('.todo-list').addEventListener('blur', e => {
     return;
   }
 
-  const id = Number(e.target.closest('li').dataset.id);
+  const id = e.target.closest('li').dataset.id;
 
   if (!e.target.dataset.iscanceled) {
     exitEditMode(id, e.target.value);
@@ -161,6 +146,28 @@ qs('.todo-list').addEventListener('keyup', e => {
   } else if (e.code === 'Escape') {
     e.target.dataset.iscanceled = true;
     e.target.blur();
+  }
+});
+
+qs('.todo-list').addEventListener('change', e => {
+  const id = e.target.closest('li').dataset.id;
+  if (id && e.target.matches('.toggle')) {
+    updateComplete(id, e.target.checked);
+    model.update(id, { completed: e.target.checked });
+    updateCount();
+  }
+});
+qs('.todo-list').addEventListener('click', e => {
+  const id = e.target.closest('li').dataset.id;
+  if (id && e.target.matches('.destroy')) {
+    model.remove(id);
+    render();
+  }
+});
+qs('.todo-list').addEventListener('dblclick', e => {
+  const id = e.target.closest('li').dataset.id;
+  if (id && e.target.matches('label')) {
+    enterEditMode(id, e.target.textContent);
   }
 });
 

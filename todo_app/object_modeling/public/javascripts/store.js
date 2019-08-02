@@ -3,40 +3,40 @@ class Store {
     this._dbName = name;
 
     if (!localStorage.getItem(name)) {
-      const todos = [];
-      localStorage.setItem(name, JSON.stringify(todos));
+      const store = [];
+      localStorage.setItem(name, JSON.stringify(store));
     }
   }
 
   find = query => {
-    const todos = JSON.parse(localStorage.getItem(this._dbName));
-    return todos.filter(item => match(query, item));
+    const store = JSON.parse(localStorage.getItem(this._dbName));
+    return store.filter(item => match(query, item));
   };
 
   save = (data, id) => {
-    const todos = JSON.parse(localStorage.getItem(this._dbName));
+    const store = JSON.parse(localStorage.getItem(this._dbName));
 
     if (id) {
-      const index = todos.findIndex(item => item.id === id);
+      const index = store.findIndex(item => item._id === id);
       if (index < 0) return null;
 
-      Object.assign(todos[index], data);
-      localStorage.setItem(this._dbName, JSON.stringify(todos));
-      return todos[index];
+      Object.assign(store[index], data);
+      localStorage.setItem(this._dbName, JSON.stringify(store));
+      return store[index];
     } else {
-      data.id = new Date().getTime();
-      todos.push(data);
-      localStorage.setItem(this._dbName, JSON.stringify(todos));
+      data._id = String(new Date().getTime());
+      store.push(data);
+      localStorage.setItem(this._dbName, JSON.stringify(store));
       return data;
     }
   };
 
   remove = id => {
-    const todos = JSON.parse(localStorage.getItem(this._dbName));
-    const index = todos.findIndex(item => item.id === id);
-    if (index < 0) return;
-
-    todos.splice(index, 1);
-    localStorage.setItem(this._dbName, JSON.stringify(todos));
+    const store = JSON.parse(localStorage.getItem(this._dbName));
+    const index = store.findIndex(item => item._id === id);
+    if (index >= 0) {
+      store.splice(index, 1);
+      localStorage.setItem(this._dbName, JSON.stringify(store));
+    }
   };
 }

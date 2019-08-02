@@ -1,5 +1,5 @@
 // Storage for todo list
-let store = [];
+const store = [];
 
 // find todo item
 const findItem = query => {
