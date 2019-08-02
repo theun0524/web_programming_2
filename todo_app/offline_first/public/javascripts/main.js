@@ -40,8 +40,7 @@ const exitEditMode = (id, title) => {
   }
 };
 
-// toggle item completed
-const toggleComplete = (id, completed) => {
+const updateComplete = (id, completed) => {
   const item = qs(`li[data-id="${id}"]`);
   if (completed) {
     item.classList.add('completed');
@@ -91,11 +90,11 @@ const render = () => {
           '<button class="destroy"></button>' + 
         '</div>';
 
-      toggleComplete(todo._id, todo.completed);
+      updateComplete(todo._id, todo.completed);
 
       qs('.toggle', item).addEventListener('change', e => {
         const id = e.target.closest('li').dataset.id;
-        toggleComplete(id, e.target.checked);
+        updateComplete(id, e.target.checked);
         model.update(id, { completed: e.target.checked }).then(updateCount);
       });
       qs('.destroy', item).addEventListener('click', e => {

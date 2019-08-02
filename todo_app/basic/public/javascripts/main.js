@@ -37,8 +37,7 @@ const exitEditMode = (id, title) => {
   }
 };
 
-// toggle item completed
-const toggleComplete = (id, completed) => {
+const updateComplete = (id, completed) => {
   const item = qs(`li[data-id="${id}"]`);
   if (completed) {
     item.classList.add('completed');
@@ -88,7 +87,7 @@ const render = () => {
           '<button class="destroy"></button>' + 
         '</div>';
 
-      toggleComplete(todo._id, todo.completed);
+      updateComplete(todo._id, todo.completed);
     }
   }
 
@@ -121,7 +120,7 @@ qs('.clear-completed').addEventListener('click', () => {
   const data = findItem({ completed: true });
   data.forEach(item => {
     removeItem(item._id);
-  })
+  });
   render();
 });
 
@@ -152,7 +151,7 @@ qs('.todo-list').addEventListener('keyup', e => {
 qs('.todo-list').addEventListener('change', e => {
   const id = e.target.closest('li').dataset.id;
   if (id && e.target.matches('.toggle')) {
-    toggleComplete(id, e.target.checked);
+    updateComplete(id, e.target.checked);
     saveItem({ completed: e.target.checked }, id);
     updateCount();
   }
