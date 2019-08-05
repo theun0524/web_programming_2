@@ -43,7 +43,7 @@ class Store {
     }
     localStorage.setItem(this._dbName, JSON.stringify(store));
     return data;
-};
+  };
 
   remove = async id => {
     const store = JSON.parse(localStorage.getItem(this._dbName));
