@@ -104,9 +104,11 @@ const render = () => {
 
 // Register event handlers
 qs('.new-todo').addEventListener('change', async e => {
-  await model.create(e.target.value);
-  e.target.value = '';
-  render();
+  if (e.target.value.trim()) {
+    await model.create(e.target.value);
+    e.target.value = '';
+    render();
+  }
 });
 
 qs('.toggle-all').addEventListener('change', async e => {
