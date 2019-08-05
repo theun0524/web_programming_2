@@ -3,25 +3,25 @@ class Store {
     this._dbName = name;
 
     if (!localStorage.getItem(name)) {
-      const todos = [];
-      localStorage.setItem(name, JSON.stringify(todos));
+      const store = [];
+      localStorage.setItem(name, JSON.stringify(store));
     }
   }
 
   find = query => {
-    const todos = JSON.parse(localStorage.getItem(this._dbName));
-    return todos.filter(item => match(query, item));
+    const store = JSON.parse(localStorage.getItem(this._dbName));
+    return store.filter(item => match(query, item));
   };
 
   save = async (data, id) => {
-    const todos = JSON.parse(localStorage.getItem(this._dbName));
+    const store = JSON.parse(localStorage.getItem(this._dbName));
 
     if (id) {
-      const index = todos.findIndex(item => item._id === id);
+      const index = store.findIndex(item => item._id === id);
       if (index < 0) return null;
 
-      Object.assign(todos[index], data);
-      localStorage.setItem(this._dbName, JSON.stringify(todos));
+      Object.assign(store[index], data);
+      localStorage.setItem(this._dbName, JSON.stringify(store));
 
       try {
         await fetch(
@@ -35,7 +35,7 @@ class Store {
       } catch (e) {
         console.warn('update failed:', e.message);
       }
-      return todos[index];
+      return store[index];
     } else {
       try {
         const response = await fetch(
@@ -49,34 +49,33 @@ class Store {
         data = await response.json();
       } catch (e) {
         console.warn('create failed:', e.message);
-        data._id = new Date().getTime();
+        data._id = String(new Date().getTime());
       }
-      todos.push(data);
-      localStorage.setItem(this._dbName, JSON.stringify(todos));
+      store.push(data);
+      localStorage.setItem(this._dbName, JSON.stringify(store));
       return data;
     }
   };
 
   remove = async id => {
-    const todos = JSON.parse(localStorage.getItem(this._dbName));
-    const index = todos.findIndex(item => item._id === id);
-    if (index < 0) return;
-
-    todos.splice(index, 1);
-    localStorage.setItem(this._dbName, JSON.stringify(todos));
-
-    try {
-      await fetch(`/todos/${id}`, { method: 'DELETE' });
-    } catch (e) {
-      console.warn('delete failed:', e.message);
+    const store = JSON.parse(localStorage.getItem(this._dbName));
+    const index = store.findIndex(item => item._id === id);
+    if (index >= 0) {
+      store.splice(index, 1);
+      localStorage.setItem(this._dbName, JSON.stringify(store));
+      try {
+        await fetch(`/todos/${id}`, { method: 'DELETE' });
+      } catch (e) {
+        console.warn('delete failed:', e.message);
+      }
     }
   };
 
   initialize = async () => {
     try {
       const response = await fetch('/todos');
-      const todos = await response.json();
-      localStorage.setItem(this._dbName, JSON.stringify(todos));
+      const store = await response.json();
+      localStorage.setItem(this._dbName, JSON.stringify(store));
     } catch (e) {
       console.warn('fetch failed:', e.message);
     }
