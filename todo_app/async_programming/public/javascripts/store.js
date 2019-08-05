@@ -15,47 +15,35 @@ class Store {
 
   save = async (data, id) => {
     const store = JSON.parse(localStorage.getItem(this._dbName));
+    const options = {
+      method: id ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    };
 
     if (id) {
       const index = store.findIndex(item => item._id === id);
       if (index < 0) return null;
 
-      Object.assign(store[index], data);
-      localStorage.setItem(this._dbName, JSON.stringify(store));
-
       try {
-        await fetch(
-          `/todos/${id}`,
-          {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-          },
-        );
+        data = await fetch(`/todos/${id}`, options);
       } catch (e) {
         console.warn('update failed:', e.message);
       }
-      return store[index];
+      Object.assign(store[index], data);
     } else {
       try {
-        const response = await fetch(
-          '/todos',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-          }
-        );
+        const response = await fetch('/todos', options);
         data = await response.json();
       } catch (e) {
         console.warn('create failed:', e.message);
         data._id = String(new Date().getTime());
       }
       store.push(data);
-      localStorage.setItem(this._dbName, JSON.stringify(store));
-      return data;
     }
-  };
+    localStorage.setItem(this._dbName, JSON.stringify(store));
+    return data;
+};
 
   remove = async id => {
     const store = JSON.parse(localStorage.getItem(this._dbName));
