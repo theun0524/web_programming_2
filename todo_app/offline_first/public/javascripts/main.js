@@ -3,6 +3,7 @@ const qs = (selector, scope) => {
   return (scope || document).querySelector(selector);
 };
 
+// true if query is undefined or matched to item
 const match = (query, item) => {
   return !query || Object.keys(query).every(k => item[k] === query[k]);
 }
@@ -91,20 +92,6 @@ const render = () => {
         '</div>';
 
       updateComplete(todo._id, todo.completed);
-
-      qs('.toggle', item).addEventListener('change', e => {
-        const id = e.target.closest('li').dataset.id;
-        updateComplete(id, e.target.checked);
-        model.update(id, { completed: e.target.checked }).then(updateCount);
-      });
-      qs('.destroy', item).addEventListener('click', e => {
-        const id = e.target.closest('li').dataset.id;
-        model.remove(id).then(render);
-      });
-      qs('label', item).addEventListener('dblclick', e => {
-        const id = e.target.closest('li').dataset.id;
-        enterEditMode(id, e.target.textContent);
-      });
     }
   }
 
@@ -116,30 +103,33 @@ const render = () => {
 }
 
 // Register event handlers
-qs('.new-todo').addEventListener('change', e => {
+qs('.new-todo').addEventListener('change', async e => {
   if (e.target.value.trim()) {
-    model.create(e.target.value).then(render);
+    await model.create(e.target.value);
+    e.target.value = '';
+    render();
   }
-  e.target.value = '';
 });
 
-qs('.toggle-all').addEventListener('change', e => {
+qs('.toggle-all').addEventListener('change', async e => {
   const data = model.find();
-  Promise.all(
+  await Promise.all(
     data.map(
       item => model.update(item._id, { completed: e.target.checked })
     ),
-  ).then(render);
-});
+    );
+    render();
+  });
 
-qs('.clear-completed').addEventListener('click', () => {
+qs('.clear-completed').addEventListener('click', async () => {
   const data = model.find({ completed: true });
-  Promise.all(
+  await Promise.all(
     data.map(
       item => model.remove(item._id)
     ),
-  ).then(render);
-});
+    );
+    render();
+  });
 
 // Register edit mode event handlers
 qs('.todo-list').addEventListener('blur', e => {
@@ -162,6 +152,28 @@ qs('.todo-list').addEventListener('keyup', e => {
   } else if (e.code === 'Escape') {
     e.target.dataset.iscanceled = true;
     e.target.blur();
+  }
+});
+
+qs('.todo-list').addEventListener('change', async e => {
+  const id = e.target.closest('li').dataset.id;
+  if (id && e.target.matches('.toggle')) {
+    updateComplete(id, e.target.checked);
+    await model.update(id, { completed: e.target.checked });
+    updateCount();
+  }
+});
+qs('.todo-list').addEventListener('click', async e => {
+  const id = e.target.closest('li').dataset.id;
+  if (id && e.target.matches('.destroy')) {
+    await model.remove(id);
+    render();
+  }
+});
+qs('.todo-list').addEventListener('dblclick', e => {
+  const id = e.target.closest('li').dataset.id;
+  if (id && e.target.matches('label')) {
+    enterEditMode(id, e.target.textContent);
   }
 });
 
